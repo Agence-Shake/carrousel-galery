@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+
+# Build artifacts
+carrousel-galerie.zip
+*.zip
+
+# Claude Code local config
+.claude/
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*~

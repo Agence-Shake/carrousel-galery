@@ -1,0 +1,59 @@
+.cg-gallery-list {
+    list-style: none;
+    margin: 0 0 10px;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    min-height: 110px;
+}
+
+.cg-gallery-list:empty::before {
+    content: "Aucune image. Clique sur \"Ajouter / modifier les images\".";
+    color: var(--cg-mb-muted);
+    font-style: italic;
+}
+
+.cg-item {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    margin: 0;
+    border: 1px solid var(--cg-mb-border);
+    border-radius: 3px;
+    overflow: hidden;
+    cursor: move;
+    background: var(--cg-mb-thumb-bg);
+}
+
+.cg-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.cg-item .cg-remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 22px;
+    height: 22px;
+    line-height: 18px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: var(--cg-mb-overlay);
+    color: var(--cg-surface);
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.cg-item .cg-remove:hover {
+    background: var(--cg-mb-delete);
+}
+
+.cg-item.cg-dragging {
+    opacity: 0.4;
+    transform: scale(0.96);
+}

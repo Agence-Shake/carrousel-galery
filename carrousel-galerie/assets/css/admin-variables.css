@@ -1,0 +1,71 @@
+/* ============================================================
+   Carrousel Galerie — Variables CSS (admin)
+   Centralise toutes les valeurs de design.
+   Toute couleur, ombre ou rayon récurrent DOIT passer par ici.
+   ============================================================ */
+
+:root {
+    /* ----- Surfaces & fonds ----- */
+    --cg-bg:           #f8fafc;
+    --cg-surface:      #ffffff;
+    --cg-soft:         #f8fafc;
+    --cg-soft-2:       #f1f5f9;
+
+    /* ----- Bordures ----- */
+    --cg-border:       #e5e7eb;     /* default */
+    --cg-border-2:     #e2e8f0;     /* secondary, divider */
+    --cg-border-3:     #cbd5e1;     /* inputs, slider track */
+
+    /* ----- Texte (ink) ----- */
+    --cg-ink:          #0f172a;
+    --cg-ink-2:        #475569;
+    --cg-ink-3:        #94a3b8;
+    --cg-placeholder:  #64748b;
+
+    /* ----- Accent indigo ----- */
+    --cg-accent:        #4f46e5;
+    --cg-accent-2:      #4338ca;
+    --cg-accent-soft:   #eef2ff;
+    --cg-accent-border: #c7d2fe;
+
+    /* ----- Focus rings & ombres accent (rgba indigo) ----- */
+    --cg-ring:          rgba(79, 70, 229, 0.15);
+    --cg-ring-strong:   rgba(79, 70, 229, 0.25);
+    --cg-shadow-accent: rgba(79, 70, 229, 0.30);
+
+    /* ----- Blocs / illustrations ----- */
+    --cg-block:         #94a3b8;     /* slide preset blocks (slate-400) */
+
+    /* ----- Code blocks (dark surface) ----- */
+    --cg-code-bg:       #0f172a;
+    --cg-code-text:     #e2e8f0;
+    --cg-code-border:   #1e293b;
+
+    /* ----- États sémantiques ----- */
+    --cg-success:        #059669;
+    --cg-success-bg:     #ecfdf5;
+    --cg-success-border: #6ee7b7;
+    --cg-danger:         #b91c1c;
+    --cg-danger-bg:      #fef2f2;
+    --cg-danger-border:  #fca5a5;
+
+    /* ----- Tons "métabox" (édition post) ----- */
+    --cg-mb-muted:       #777;
+    --cg-mb-border:      #ddd;
+    --cg-mb-thumb-bg:    #f6f7f7;
+    --cg-mb-placeholder: #fafafa;
+    --cg-mb-placeholder-border: #bbb;
+    --cg-mb-delete:      #d63638;
+    --cg-mb-overlay:     rgba(0, 0, 0, 0.65);
+
+    /* ----- Rayons ----- */
+    --cg-radius:    10px;
+    --cg-radius-sm: 6px;
+
+    /* ----- Ombres ----- */
+    --cg-shadow:       0 1px 2px rgba(15, 23, 42, 0.04),
+                       0 1px 3px rgba(15, 23, 42, 0.04);
+    --cg-shadow-pop:   0 4px 12px rgba(15, 23, 42, 0.08),
+                       0 0 0 1px rgba(15, 23, 42, 0.02);
+    --cg-shadow-thumb: 0 1px 3px rgba(15, 23, 42, 0.30);
+}
