@@ -1,0 +1,154 @@
+/* Container externe qui crée les previews */
+.custom-swiper-wrapper {
+    overflow: hidden;
+    padding-left: var(--cg-wp-mobile, 5vw);
+    padding-right: var(--cg-wp-mobile, 5vw);
+    background: var(--cg-bg, transparent);
+}
+
+/* Style des contrôles (responsive) — switch des propriétés via media queries
+   à partir des vars -desktop / -tablette / -mobile injectées par le shortcode. */
+.custom-swiper-galerie {
+    --cg-bullet-size:           var(--cg-bullet-size-mobile, 9px);
+    --cg-bullet-gap:            var(--cg-bullet-gap-mobile, 1.25rem);
+    --swiper-navigation-size:   var(--cg-arrow-size-mobile, 44px);
+    --cg-img-max-height:        var(--cg-img-max-height-mobile, 65vh);
+}
+
+/* Swiper */
+.custom-swiper-galerie {
+    overflow: visible;
+}
+
+/* Wrapper */
+.custom-swiper-galerie .swiper-wrapper {
+    align-items: stretch;
+}
+
+/* Slides */
+.custom-swiper-galerie .swiper-slide {
+    height: auto;
+}
+
+/* Images */
+.custom-swiper-galerie img {
+    width: 100%;
+    height: 100%;
+    max-height: var(--cg-img-max-height, 65vh);
+    display: block;
+    object-fit: cover;
+}
+
+/* Direction verticale : Swiper a besoin d'une hauteur explicite sinon il collapse.
+   On utilise la même valeur que la max-height image pour rester cohérent. */
+.custom-swiper-galerie[data-cg-direction-mobile="vertical"] {
+    height: var(--cg-img-max-height, 65vh);
+}
+
+.custom-swiper-galerie p {
+    margin: 0;
+}
+
+/* Pagination */
+.custom-swiper-galerie .swiper-pagination {
+    position: relative;
+    margin-top: 35px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--cg-bullet-gap, 1.25rem);
+}
+
+/* Bullets */
+.custom-swiper-galerie .swiper-pagination-bullet {
+    width: var(--cg-bullet-size, 9px);
+    height: var(--cg-bullet-size, 9px);
+    border: 1px solid var(--cg-bullet, #000);
+    border-radius: 50%;
+    background: transparent;
+    opacity: 1;
+    transition: width .3s ease, background .3s ease;
+}
+
+/* Bullet active : pill ~2.78× la hauteur */
+.custom-swiper-galerie .swiper-pagination-bullet-active {
+    width: calc(var(--cg-bullet-size, 9px) * 2.78);
+    background: var(--cg-bullet-active, #000);
+    border-color: var(--cg-bullet-active, #000);
+    border-radius: calc(var(--cg-bullet-size, 9px) * 2.33);
+}
+
+/* Flèches */
+.custom-swiper-galerie .swiper-button-prev,
+.custom-swiper-galerie .swiper-button-next {
+    color: var(--cg-arrow, #000);
+    transition: color .2s ease;
+}
+.custom-swiper-galerie .swiper-button-prev:hover,
+.custom-swiper-galerie .swiper-button-next:hover {
+    color: var(--cg-arrow-hover, #000);
+}
+/* Override Swiper 8 (qui ne supporte pas --swiper-navigation-sides-offset) :
+   on lit nous-mêmes la variable pour piloter inside/outside. */
+.custom-swiper-galerie .swiper-button-prev {
+    left: var(--swiper-navigation-sides-offset, 10px);
+    right: auto;
+}
+.custom-swiper-galerie .swiper-button-next {
+    right: var(--swiper-navigation-sides-offset, 10px);
+    left: auto;
+}
+
+/* Emplacement des flèches : on pilote la variable native Swiper.
+   "inside"  → +10px (default Swiper, sur les slides)
+   "outside" → -(taille flèche + 4px) → flèches dans la zone padding du wrapper */
+.custom-swiper-galerie[data-cg-arrows-mobile="inside"]  { --swiper-navigation-sides-offset: 10px; }
+.custom-swiper-galerie[data-cg-arrows-mobile="outside"] { --swiper-navigation-sides-offset: calc(-1 * var(--swiper-navigation-size, 44px) - 4px); }
+
+@media (max-width: 767px) {
+    .custom-swiper-galerie .swiper-pagination {
+        gap: calc(var(--cg-bullet-gap, 1.25rem) * 0.8);
+    }
+}
+
+@media (min-width: 768px) {
+    .custom-swiper-wrapper {
+        padding-left: var(--cg-wp-tablette, var(--cg-wp-mobile, 5vw));
+        padding-right: var(--cg-wp-tablette, var(--cg-wp-mobile, 5vw));
+    }
+    .custom-swiper-galerie {
+        --cg-bullet-size:         var(--cg-bullet-size-tablette, var(--cg-bullet-size-mobile, 9px));
+        --cg-bullet-gap:          var(--cg-bullet-gap-tablette, var(--cg-bullet-gap-mobile, 1.25rem));
+        --swiper-navigation-size: var(--cg-arrow-size-tablette, var(--cg-arrow-size-mobile, 44px));
+        --cg-img-max-height:      var(--cg-img-max-height-tablette, var(--cg-img-max-height-mobile, 65vh));
+    }
+    .custom-swiper-galerie[data-cg-arrows-tablette="inside"]  {
+        --swiper-navigation-sides-offset: 10px;
+    }
+    .custom-swiper-galerie[data-cg-arrows-tablette="outside"] {
+        --swiper-navigation-sides-offset: calc(-1 * var(--swiper-navigation-size, 44px) - 4px);
+    }
+    /* On reset la hauteur si tablette repasse en horizontal (sinon l'attr mobile-vertical reste sticky) */
+    .custom-swiper-galerie[data-cg-direction-tablette="horizontal"] { height: auto; }
+    .custom-swiper-galerie[data-cg-direction-tablette="vertical"]   { height: var(--cg-img-max-height, 65vh); }
+}
+@media (min-width: 1024px) {
+    .custom-swiper-wrapper {
+        padding-left: var(--cg-wp-desktop, 5vw);
+        padding-right: var(--cg-wp-desktop, 5vw);
+    }
+    .custom-swiper-galerie {
+        --cg-bullet-size:         var(--cg-bullet-size-desktop, 9px);
+        --cg-bullet-gap:          var(--cg-bullet-gap-desktop, 1.25rem);
+        --swiper-navigation-size: var(--cg-arrow-size-desktop, 44px);
+        --cg-img-max-height:      var(--cg-img-max-height-desktop, 65vh);
+    }
+    .custom-swiper-galerie[data-cg-arrows-desktop="inside"]  {
+        --swiper-navigation-sides-offset: 10px;
+    }
+    .custom-swiper-galerie[data-cg-arrows-desktop="outside"] {
+        --swiper-navigation-sides-offset: calc(-1 * var(--swiper-navigation-size, 44px) - 4px);
+    }
+    .custom-swiper-galerie[data-cg-direction-desktop="horizontal"] { height: auto; }
+    .custom-swiper-galerie[data-cg-direction-desktop="vertical"]   { height: var(--cg-img-max-height, 65vh); }
+}
