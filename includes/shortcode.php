@@ -20,8 +20,11 @@ function cg_resolve( $key, $bp, $values ) {
  * Attributs (optionnels) qui surchargent les réglages globaux — mêmes clés que les réglages.
  */
 function cg_galerie_shortcode( $atts ) {
-    $defaults = cg_get_settings();
-    $atts     = shortcode_atts( $defaults, $atts, 'galerie_projet' );
+    $raw_atts = is_array( $atts ) ? $atts : [];
+    $preset_id = isset( $raw_atts['preset'] ) ? sanitize_key( $raw_atts['preset'] ) : 'default';
+
+    $defaults = cg_get_preset_settings( $preset_id );
+    $atts     = shortcode_atts( $defaults, $raw_atts, 'galerie_projet' );
 
     // Images depuis la metabox. get_the_ID() retourne 0 hors loop (widget, REST…),
     // on fallback sur get_queried_object_id() pour les contextes singulars.
@@ -120,13 +123,14 @@ function cg_galerie_shortcode( $atts ) {
 
     // Variables CSS — couleurs.
     $css_vars = [
-        '--cg-bullet'        => $defaults['color_bullet'],
-        '--cg-bullet-active' => $defaults['color_bullet_active'],
-        '--cg-arrow'         => $defaults['color_arrow'],
-        '--cg-arrow-hover'   => $defaults['color_arrow_hover'],
+        '--cg-bullet'        => $atts['color_bullet'] ?? $defaults['color_bullet'],
+        '--cg-bullet-active' => $atts['color_bullet_active'] ?? $defaults['color_bullet_active'],
+        '--cg-arrow'         => $atts['color_arrow'] ?? $defaults['color_arrow'],
+        '--cg-arrow-hover'   => $atts['color_arrow_hover'] ?? $defaults['color_arrow_hover'],
     ];
-    if ( ! empty( $defaults['color_bg'] ) ) {
-        $css_vars['--cg-bg'] = $defaults['color_bg'];
+    $bg_color = $atts['color_bg'] ?? $defaults['color_bg'];
+    if ( ! empty( $bg_color ) ) {
+        $css_vars['--cg-bg'] = $bg_color;
     }
 
     // Variables CSS — padding latéral par breakpoint (avec fallback desktop).

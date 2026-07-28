@@ -6,11 +6,27 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'CG_META_KEY', '_cg_gallery_ids' );
 
 /**
+ * Récupère l'ensemble des post types activés à travers tous les shortcodes (présets).
+ */
+function cg_get_active_post_types() {
+    $settings = cg_get_settings();
+    $active_pts = [];
+    if ( ! empty( $settings['presets'] ) && is_array( $settings['presets'] ) ) {
+        foreach ( $settings['presets'] as $preset ) {
+            if ( ! empty( $preset['post_types'] ) && is_array( $preset['post_types'] ) ) {
+                $active_pts = array_merge( $active_pts, $preset['post_types'] );
+            }
+        }
+    }
+    return array_unique( $active_pts );
+}
+
+/**
  * Ajoute la metabox sur les post types choisis dans les réglages.
  */
 function cg_add_metabox() {
-    $settings = cg_get_settings();
-    foreach ( $settings['post_types'] as $pt ) {
+    $pts = cg_get_active_post_types();
+    foreach ( $pts as $pt ) {
         add_meta_box(
             'cg_gallery_metabox',
             'Carrousel — Galerie d\'images',
@@ -90,8 +106,8 @@ function cg_admin_assets( $hook ) {
     if ( ! $screen ) {
         return;
     }
-    $settings = cg_get_settings();
-    if ( ! in_array( $screen->post_type, $settings['post_types'], true ) ) {
+    $active_pts = cg_get_active_post_types();
+    if ( ! in_array( $screen->post_type, $active_pts, true ) ) {
         return;
     }
 

@@ -786,6 +786,31 @@ input[type="range"].cg-color-opacity:focus {
     border-color: rgba(110, 231, 183, 0.4);
 }
 
+.cg-copy-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    background: #ffffff;
+    border: 1px solid #c3c4c7;
+    border-radius: 5px;
+    color: #2271b1;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.cg-copy-badge:hover {
+    background: #2271b1;
+    color: #ffffff;
+    border-color: #2271b1;
+}
+.cg-copy-badge.cg-copied {
+    background: #10b981;
+    color: #ffffff;
+    border-color: #10b981;
+}
+
 /* Conditional row reveal animation */
 tr[data-cg-when][hidden] { display: none; }
 
