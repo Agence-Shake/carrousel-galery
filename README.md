@@ -1,77 +1,63 @@
 # Carrousel Galerie
 
-Plugin WordPress autonome qui affiche un carrousel d'images Swiper via un shortcode, alimenté par un champ ACF Galerie unique.
+Plugin WordPress autonome (version 1.1.0) qui permet de créer et gérer plusieurs shortcodes de carrousels Swiper indépendants avec leurs propres réglages et styles.
 
 ## Installation
 
 1. Copier le dossier `carrousel-galerie/` dans `wp-content/plugins/`.
-2. Activer "Carrousel Galerie" dans l'admin WordPress (Extensions). **Aucune dépendance** (pas besoin d'ACF).
-3. Aller dans **Réglages → Carrousel Galerie** pour configurer.
+2. Activer **Carrousel Galerie** dans l'administration WordPress (**Extensions**). Aucune dépendance externe requise.
+3. Un nouveau menu principal **Carrousel Galerie** apparaît dans la barre latérale d'administration.
 
-## Configuration
+## Gestion des Shortcodes
 
-Tout se passe dans **Réglages → Carrousel Galerie** :
+L'extension propose une interface d'administration complète basée sur les standards WordPress :
 
-- **Layout & comportement** : slides visibles par breakpoint (desktop/tablette/mobile), espacement, vitesse, autoplay, loop, pagination, flèches, effet, direction, slide de démarrage…
-- **Couleurs** : bullets, flèches, fond — injectées en variables CSS sur le carrousel.
-- **Post types** : cocher les types de contenu (articles, CPT créés via CPT UI, etc.) sur lesquels le champ Galerie doit apparaître.
+- **Tous les shortcodes** : Liste de l'ensemble de vos shortcodes configurés avec boutons d'action rapide (*Modifier*, *Dupliquer*, *Supprimer*) et bouton de copie en 1 clic.
+- **Ajouter / Modifier un shortcode** : Interface permettant de configurer un shortcode spécifique :
+  - **Nom du shortcode**
+  - **Contenus associés (Post Types)** : Choix des types de contenus (Articles, Pages, CPT UI...) sur lesquels afficher la metabox de gestion des images pour ce shortcode.
+  - **Layout & comportement** : Nombre de slides visibles par breakpoint (desktop/tablette/mobile), espacements avec unités (px, rem, %, vw...), padding latéral, hauteur, pagination, flèches de navigation, direction défilement (horizontal/vertical)...
+  - **Animation & Autoplay** : Vitesse, boucle infinie, autoplay avec délai et pause au survol, slide de démarrage...
+  - **Couleurs & CSS** : Couleurs des bullets, flèches et fond + zone de CSS personnalisé propre au shortcode.
 
 ## Utilisation
 
-Sur un post du type sélectionné, ouvrir la metabox **Carrousel — Galerie d'images** (en bas de l'éditeur), cliquer sur *Ajouter / modifier les images*, sélectionner plusieurs images via le media uploader natif, les réordonner par glisser-déposer. Puis insérer dans le contenu :
+1. Sur un article ou une page du type de contenu associé à votre shortcode, ouvrez la metabox **Carrousel — Galerie d'images** (en bas de l'éditeur).
+2. Cliquez sur **Ajouter / modifier les images**, sélectionnez vos visuels et réordonnez-les par glisser-déposer.
+3. Insérez le code du shortcode souhaité dans votre contenu :
 
-```
-[galerie_projet]
-```
-
-### Surcharger les réglages par instance
-
-Tous les paramètres globaux peuvent être surchargés via les attributs du shortcode :
-
-```
-[galerie_projet desktop="3" tablette="2" mobile="1.2" autoplay="1" autoplay_delay="4000" loop="1" start_slide="2"]
+```text
+[galerie_projet preset="votre_preset_id"]
 ```
 
-Attributs disponibles :
+> **Note :** Si aucun identifiant n'est spécifié (`[galerie_projet]`), les réglages du shortcode par défaut sont utilisés.
 
-| Attribut | Type | Description |
-|---|---|---|
-| `desktop`, `tablette`, `mobile` | float | slidesPerView par breakpoint |
-| `space_desktop`, `space_tablette`, `space_mobile` | int (px) | espace entre slides |
-| `speed` | int (ms) | vitesse de transition |
-| `loop` | 0/1 | boucle infinie |
-| `pagination` | 0/1 | afficher les bullets |
-| `fleches` | 0/1 | afficher les flèches |
-| `autoplay` | 0/1 | autoplay |
-| `autoplay_delay` | int (ms) | délai autoplay |
-| `pause_hover` | 0/1 | pause au survol |
-| `effet` | slide / fade / coverflow / cube / flip | effet de transition |
-| `direction` | horizontal / vertical | sens du défilement |
-| `centered` | 0/1 | slides centrées |
-| `start_slide` | int | index de la slide affichée à l'init (0 = première) |
+### Surcharge d'attributs par instance
 
-## Swiper
+Tous les shortcodes peuvent être ponctuellement surchargés via des attributs en ligne :
 
-- Si **Elementor** est actif sur le site, le plugin part du principe que Swiper est déjà chargé.
-- Sinon, il charge Swiper 11 depuis le CDN officiel.
+```text
+[galerie_projet preset="hero" slides_desktop="3" autoplay="1" speed="500"]
+```
 
 ## Architecture
 
-```
+```text
 carrousel-galerie/
-├── carrousel-galerie.php       # header plugin, enqueue, includes
+├── carrousel-galerie.php       # Header plugin v1.1.0, enqueue, hook footer custom CSS
 ├── includes/
-│   ├── metabox.php             # metabox native + media uploader (post meta _cg_gallery_ids)
-│   ├── settings.php            # page de réglages + valeurs par défaut
-│   └── shortcode.php           # rendu du shortcode
+│   ├── settings.php            # Menu principal Admin, vues Liste & Édition des shortcodes
+│   ├── metabox.php             # Metabox native + media uploader (post meta _cg_gallery_ids)
+│   └── shortcode.php           # Traitement et rendu front-end des shortcodes
 ├── assets/
 │   ├── css/
-│   │   ├── carrousel.css       # front
-│   │   └── admin-metabox.css   # admin
+│   │   ├── carrousel.css       # Styles front-end
+│   │   ├── admin-settings.css  # Styles admin (cartes, pickers, boutons copier)
+│   │   ├── admin-variables.css # Variables CSS admin
+│   │   └── admin-metabox.css   # Styles metabox uploader
 │   └── js/
-│       ├── carrousel.js        # front
-│       └── admin-metabox.js    # admin (media uploader + sortable)
+│       ├── carrousel.js        # Script Swiper front-end
+│       ├── admin-settings.js   # Script interactif admin (units, presets UI)
+│       └── admin-metabox.js    # Drag & drop media uploader admin
 └── README.md
 ```
-
-Les comportements (slidesPerView, autoplay, loop…) sont injectés via `data-cg-config` (JSON) sur le conteneur, lu par le JS. Les couleurs passent par des **variables CSS** (`--cg-bullet`, `--cg-bullet-active`, `--cg-arrow`, `--cg-arrow-hover`, `--cg-bg`) injectées en `style=""` inline.

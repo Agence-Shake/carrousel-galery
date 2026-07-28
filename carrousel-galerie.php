@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Carrousel Galerie
- * Description: Affiche un carrousel Swiper de la galerie propre à chaque article, page ou CPT (CPT UI, ACF, register_post_type…).
- * Version: 1.0.29
+ * Description: Affiche un carrousel Swiper de la galerie propre à chaque article, page ou CPT.
+ * Version: 1.1.0
  * Author: Shake
  * Requires PHP: 7.4
  * Text Domain: carrousel-galerie
@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'CG_VERSION', '1.0.29' );
+define( 'CG_VERSION', '1.1.0' );
 define( 'CG_PATH', plugin_dir_path( __FILE__ ) );
 define( 'CG_URL', plugin_dir_url( __FILE__ ) );
 define( 'CG_OPTION_KEY', 'carrousel_galerie_settings' );
@@ -21,14 +21,6 @@ require_once CG_PATH . 'includes/settings.php';
 require_once CG_PATH . 'includes/metabox.php';
 require_once CG_PATH . 'includes/shortcode.php';
 
-/**
- * Enregistre Swiper + assets du plugin.
- *
- * On utilise Swiper 11 (version courante). Pour cohabiter avec Elementor (qui charge
- * aussi Swiper 11), on capture notre Swiper dans window.cgSwiper juste après son
- * chargement. Notre carrousel.js utilise cgSwiper, et Elementor garde sa propre
- * référence interne — pas de conflit.
- */
 function cg_register_assets() {
     $swiper_handle  = 'cg-swiper';
     $swiper_version = '11.1.14';
@@ -40,11 +32,6 @@ function cg_register_assets() {
         $swiper_version,
         true
     );
-    // wp_add_inline_script('after') injecte un <script> juste après le tag du CDN
-    // Swiper, capturant window.Swiper immédiatement. Si Elementor enqueue sa propre
-    // Swiper 11 avant nous, window.Swiper = Elementor → cgSwiper capture la même
-    // instance (cohérent puisque c'est la même version). Si Elementor charge après,
-    // cgSwiper a déjà la nôtre. Dans les deux cas, cgSwiper est valide.
     wp_add_inline_script(
         $swiper_handle,
         'window.cgSwiper = window.Swiper;',
@@ -75,11 +62,8 @@ function cg_register_assets() {
 }
 add_action( 'wp_enqueue_scripts', 'cg_register_assets' );
 
-/**
- * Assets de la page de réglages (Apparence → Carrousel Galerie).
- */
 function cg_admin_settings_assets( $hook ) {
-    if ( $hook !== 'appearance_page_carrousel-galerie' ) {
+    if ( strpos( $hook, 'carrousel-galerie' ) === false ) {
         return;
     }
     wp_enqueue_style( 'cg-admin-variables', CG_URL . 'assets/css/admin-variables.css', [], CG_VERSION );
@@ -92,30 +76,30 @@ function cg_admin_settings_assets( $hook ) {
 }
 add_action( 'admin_enqueue_scripts', 'cg_admin_settings_assets' );
 
-/**
- * Injecte le CSS personnalisé saisi dans les réglages, en fin de <body>.
- * On échappe l'éventuelle séquence </style pour empêcher un breakout.
- */
 function cg_print_custom_css() {
     if ( is_admin() ) {
         return;
     }
     $settings = function_exists( 'cg_get_settings' ) ? cg_get_settings() : [];
-    $css      = isset( $settings['custom_css'] ) ? (string) $settings['custom_css'] : '';
-    if ( $css === '' ) {
+    $combined_css = '';
+    if ( ! empty( $settings['presets'] ) && is_array( $settings['presets'] ) ) {
+        foreach ( $settings['presets'] as $p ) {
+            if ( ! empty( $p['custom_css'] ) ) {
+                $combined_css .= "\n" . (string) $p['custom_css'];
+            }
+        }
+    }
+    $combined_css = trim( $combined_css );
+    if ( $combined_css === '' ) {
         return;
     }
-    // Empêche un breakout via </style avec whitespace ou casse arbitraires.
-    $css = preg_replace( '#</\s*style#i', '<\/style', $css );
+    $css = preg_replace( '#</\s*style#i', '<\/style', $combined_css );
     echo "\n<style id=\"cg-custom-css\">\n" . $css . "\n</style>\n";
 }
 add_action( 'wp_footer', 'cg_print_custom_css', 100 );
 
-/**
- * Ajoute un lien "Réglages" sur la ligne du plugin dans Extensions → Extensions installées.
- */
 function cg_plugin_action_links( $links ) {
-    $settings_link = '<a href="' . esc_url( admin_url( 'themes.php?page=carrousel-galerie' ) ) . '">Réglages</a>';
+    $settings_link = '<a href="' . esc_url( admin_url( 'admin.php?page=carrousel-galerie' ) ) . '">Shortcodes</a>';
     array_unshift( $links, $settings_link );
     return $links;
 }
