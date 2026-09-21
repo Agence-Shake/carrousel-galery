@@ -63,6 +63,7 @@
 .custom-swiper-galerie .swiper-pagination-bullet {
     width: var(--cg-bullet-size, 9px);
     height: var(--cg-bullet-size, 9px);
+    margin: 0 !important;
     border: 1px solid var(--cg-bullet, #000);
     border-radius: 50%;
     background: transparent;
@@ -108,6 +109,51 @@
 @media (max-width: 767px) {
     .custom-swiper-galerie .swiper-pagination {
         gap: calc(var(--cg-bullet-gap, 1.25rem) * 0.8);
+    }
+}
+
+/* ============================================================
+   Mode "Galerie"
+   ============================================================ */
+.cg-gallery-mode {
+    /* le wrapper réutilise le padding latéral du mode carrousel */
+    overflow: hidden;
+}
+.cg-gallery-mode .cg-gallery {
+    display: grid;
+    grid-template-columns: repeat(var(--cg-cols-mobile, 1), minmax(0, 1fr));
+    gap: var(--cg-cols-gap-mobile, 12px);
+}
+.cg-gallery-mode .cg-gallery img {
+    width: 100%;
+    /* --cg-img-h / --cg-img-ratio : 'auto' + ratio quand la hauteur est saisie en %
+       (cf. cg_render_gallery_mode), sinon 100% + max-height classique. */
+    height: var(--cg-img-h-mobile, 100%);
+    aspect-ratio: var(--cg-img-ratio-mobile, auto);
+    max-height: var(--cg-img-max-height-mobile, 65vh);
+    display: block;
+    object-fit: cover;
+}
+@media (min-width: 768px) {
+    .cg-gallery-mode .cg-gallery {
+        grid-template-columns: repeat(var(--cg-cols-tablette, var(--cg-cols-mobile, 2)), minmax(0, 1fr));
+        gap: var(--cg-cols-gap-tablette, var(--cg-cols-gap-mobile, 16px));
+    }
+    .cg-gallery-mode .cg-gallery img {
+        height: var(--cg-img-h-tablette, 100%);
+        aspect-ratio: var(--cg-img-ratio-tablette, auto);
+        max-height: var(--cg-img-max-height-tablette, 65vh);
+    }
+}
+@media (min-width: 1024px) {
+    .cg-gallery-mode .cg-gallery {
+        grid-template-columns: repeat(var(--cg-cols-desktop, 3), minmax(0, 1fr));
+        gap: var(--cg-cols-gap-desktop, 20px);
+    }
+    .cg-gallery-mode .cg-gallery img {
+        height: var(--cg-img-h-desktop, 100%);
+        aspect-ratio: var(--cg-img-ratio-desktop, auto);
+        max-height: var(--cg-img-max-height-desktop, 65vh);
     }
 }
 

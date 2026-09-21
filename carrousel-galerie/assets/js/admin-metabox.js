@@ -64,7 +64,7 @@
             syncInput();
         });
 
-        // ====== Drag-to-reorder (HTML5 DnD natif) ======
+        // ====== Drag-to-reorder ======
         let dragged = null;
 
         list.addEventListener('dragstart', e => {
@@ -100,7 +100,6 @@
             syncInput();
         });
 
-        // Active draggable sur les items déjà présents (au load).
         list.querySelectorAll('.cg-item').forEach(el => { el.draggable = true; });
     };
 

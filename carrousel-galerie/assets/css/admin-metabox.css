@@ -1,3 +1,20 @@
+/* Liste des shortcodes disponibles quand plusieurs présets ciblent ce post type. */
+.cg-shortcode-hints {
+    list-style: none;
+    margin: 0 0 12px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.cg-shortcode-hints li {
+    margin: 0;
+    font-size: 13px;
+}
+.cg-shortcode-hint-name {
+    color: var(--cg-mb-muted);
+}
+
 .cg-gallery-list {
     list-style: none;
     margin: 0 0 10px;

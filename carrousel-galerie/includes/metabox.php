@@ -6,11 +6,27 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'CG_META_KEY', '_cg_gallery_ids' );
 
 /**
+ * Récupère l'ensemble des post types activés à travers tous les shortcodes (présets).
+ */
+function cg_get_active_post_types() {
+    $settings = cg_get_settings();
+    $active_pts = [];
+    if ( ! empty( $settings['presets'] ) && is_array( $settings['presets'] ) ) {
+        foreach ( $settings['presets'] as $preset ) {
+            if ( ! empty( $preset['post_types'] ) && is_array( $preset['post_types'] ) ) {
+                $active_pts = array_merge( $active_pts, $preset['post_types'] );
+            }
+        }
+    }
+    return array_unique( $active_pts );
+}
+
+/**
  * Ajoute la metabox sur les post types choisis dans les réglages.
  */
 function cg_add_metabox() {
-    $settings = cg_get_settings();
-    foreach ( $settings['post_types'] as $pt ) {
+    $pts = cg_get_active_post_types();
+    foreach ( $pts as $pt ) {
         add_meta_box(
             'cg_gallery_metabox',
             'Carrousel — Galerie d\'images',
@@ -24,6 +40,31 @@ function cg_add_metabox() {
 add_action( 'add_meta_boxes', 'cg_add_metabox' );
 
 /**
+ * Retourne les présets dont les post_types incluent $post_type, sous la forme
+ * [ preset_id => ['name' => …, 'tag' => '[galerie_projet preset="…"]'] ].
+ */
+function cg_get_presets_for_post_type( $post_type ) {
+    $settings = cg_get_settings();
+    $out      = [];
+    if ( empty( $settings['presets'] ) || ! is_array( $settings['presets'] ) ) {
+        return $out;
+    }
+    foreach ( $settings['presets'] as $pid => $preset ) {
+        $pts = ! empty( $preset['post_types'] ) && is_array( $preset['post_types'] ) ? $preset['post_types'] : [];
+        if ( ! in_array( $post_type, $pts, true ) ) {
+            continue;
+        }
+        $out[ $pid ] = [
+            'name' => ! empty( $preset['name'] ) ? $preset['name'] : ucfirst( $pid ),
+            'tag'  => ( $pid === 'default' )
+                ? '[galerie_projet]'
+                : '[galerie_projet preset="' . $pid . '"]',
+        ];
+    }
+    return $out;
+}
+
+/**
  * Rendu de la metabox.
  */
 function cg_render_metabox( $post ) {
@@ -31,8 +72,24 @@ function cg_render_metabox( $post ) {
 
     $ids = get_post_meta( $post->ID, CG_META_KEY, true );
     $ids = is_array( $ids ) ? array_map( 'intval', $ids ) : [];
-    ?>
-    <p>Sélectionne et réordonne les images du carrousel. Affichage avec <code>[galerie_projet]</code>.</p>
+
+    // Plusieurs shortcodes peuvent cibler le même post type : on les liste tous
+    // pour que l'utilisateur sache lequel coller ici.
+    $matching = cg_get_presets_for_post_type( $post->post_type );
+
+    if ( count( $matching ) === 1 ) :
+        $only = reset( $matching ); ?>
+        <p>Sélectionne et réordonne les images du carrousel. Affichage avec <code><?php echo esc_html( $only['tag'] ); ?></code>.</p>
+    <?php elseif ( count( $matching ) > 1 ) : ?>
+        <p>Sélectionne et réordonne les images du carrousel. Shortcodes disponibles pour ce type de contenu&nbsp;:</p>
+        <ul class="cg-shortcode-hints">
+            <?php foreach ( $matching as $info ) : ?>
+                <li><code><?php echo esc_html( $info['tag'] ); ?></code> <span class="cg-shortcode-hint-name">— <?php echo esc_html( $info['name'] ); ?></span></li>
+            <?php endforeach; ?>
+        </ul>
+    <?php else : ?>
+        <p>Sélectionne et réordonne les images du carrousel. Affichage avec <code>[galerie_projet]</code>.</p>
+    <?php endif; ?>
 
     <ul id="cg-gallery-list" class="cg-gallery-list">
         <?php foreach ( $ids as $id ) :
@@ -90,8 +147,8 @@ function cg_admin_assets( $hook ) {
     if ( ! $screen ) {
         return;
     }
-    $settings = cg_get_settings();
-    if ( ! in_array( $screen->post_type, $settings['post_types'], true ) ) {
+    $active_pts = cg_get_active_post_types();
+    if ( ! in_array( $screen->post_type, $active_pts, true ) ) {
         return;
     }
 

@@ -2,11 +2,49 @@
     'use strict';
 
     const data = window.cgAdminData || {};
-    const optPrefix = data.optionKey || 'carrousel_galerie_settings';
+    const form = document.querySelector('.cg-form');
+    const optPrefix = (form && form.dataset.cgOptPrefix)
+        || data.optionKey
+        || 'carrousel_galerie_settings';
+
+    const nameSel = suffix =>
+        `[name="${(optPrefix + suffix).replace(/(["\\])/g, '\\$1')}"]`;
 
     const dispatchChange = el => {
         el.dispatchEvent(new Event('change', { bubbles: true }));
     };
+
+    // ====== Mode d'affichage : toggle radio visuel ======
+    const modeOptions = document.querySelectorAll('.cg-mode-option');
+    const modeNotes   = document.querySelectorAll('[data-cg-mode-when]');
+    const modeWrap    = document.querySelector('.cg-wrap');
+
+    const syncModeUI = () => {
+        let current = 'carrousel';
+        modeOptions.forEach(opt => {
+            const input = opt.querySelector('input[type="radio"]');
+            if (input?.checked) current = input.value;
+        });
+        modeOptions.forEach(opt => {
+            const input = opt.querySelector('input[type="radio"]');
+            opt.classList.toggle('is-active', input?.value === current);
+        });
+        modeNotes.forEach(note => {
+            note.hidden = note.dataset.cgModeWhen !== current;
+        });
+        if (modeWrap) modeWrap.dataset.cgDisplay = current;
+    };
+
+    modeOptions.forEach(opt => {
+        opt.addEventListener('click', () => {
+            const input = opt.querySelector('input[type="radio"]');
+            if (input) {
+                input.checked = true;
+                syncModeUI();
+            }
+        });
+    });
+    syncModeUI();
 
     // ====== Onglets Desktop / Tablette / Mobile ======
     const tabs   = document.querySelectorAll('.cg-tab');
@@ -21,7 +59,7 @@
 
     // ====== Contrôles responsifs (pagination / fleches / direction) ======
     const desktopInput = key =>
-        document.querySelector(`[name="${optPrefix}[${key}_desktop]"]`);
+        document.querySelector(nameSel(`[${key}_desktop]`));
 
     const refreshResp = ctrl => {
         const hidden    = ctrl.querySelector('.cg-resp-hidden');
@@ -70,7 +108,7 @@
 
     // ====== Rows conditionnels par onglet (pagination / fleches, avec héritage) ======
     const resolveOn = (key, slug) => {
-        const input = document.querySelector(`[name="${optPrefix}[${key}_${slug}]"]`);
+        const input = document.querySelector(nameSel(`[${key}_${slug}]`));
         if (!input) return false;
         const val = input.value;
         if (val === '' || val == null) {
@@ -91,10 +129,11 @@
             });
         });
     };
-
+    
     ['pagination', 'fleches'].forEach(key => {
-        document.querySelectorAll(`[name^="${optPrefix}[${key}_"]`).forEach(input => {
-            input.addEventListener('change', syncConditionalRows);
+        ['desktop', 'tablette', 'mobile'].forEach(slug => {
+            const input = document.querySelector(nameSel(`[${key}_${slug}]`));
+            if (input) input.addEventListener('change', syncConditionalRows);
         });
     });
     syncConditionalRows();

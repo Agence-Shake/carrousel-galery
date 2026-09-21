@@ -36,8 +36,8 @@
     border-radius: var(--cg-radius);
     margin-bottom: 18px;
     box-shadow: var(--cg-shadow);
-    overflow: hidden;
 }
+
 .cg-card-head {
     padding: 22px 28px 6px;
     border-bottom: 1px solid var(--cg-border-2);
@@ -551,9 +551,26 @@ input[type="range"].cg-color-opacity:focus {
 /* === Actions / submit === */
 .cg-actions {
     display: flex;
+    align-items: center;
+    gap: 10px;
     justify-content: flex-end;
     margin: 8px 0 28px;
     padding: 0;
+}
+
+/* Le <a class="button"> de WP n'a ni la même hauteur ni le même line-height que
+   l'<input type="submit"> voisin → texte décentré verticalement. On le repasse en
+   inline-flex avec les mêmes métriques que .cg-submit pour aligner les deux. */
+.cg-actions .cg-cancel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 20px !important;
+    height: stretch;
+    line-height: 1.5 !important;
+    border-radius: 7px !important;
+    font-weight: 500 !important;
+    transition: all 0.15s !important;
 }
 .cg-submit.button-primary {
     background: var(--cg-accent) !important;
@@ -786,6 +803,31 @@ input[type="range"].cg-color-opacity:focus {
     border-color: rgba(110, 231, 183, 0.4);
 }
 
+.cg-copy-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    background: #ffffff;
+    border: 1px solid #c3c4c7;
+    border-radius: 5px;
+    color: #2271b1;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.cg-copy-badge:hover {
+    background: #2271b1;
+    color: #ffffff;
+    border-color: #2271b1;
+}
+.cg-copy-badge.cg-copied {
+    background: #10b981;
+    color: #ffffff;
+    border-color: #10b981;
+}
+
 /* Conditional row reveal animation */
 tr[data-cg-when][hidden] { display: none; }
 
@@ -874,6 +916,102 @@ tr[data-cg-when][hidden] { display: none; }
 .cg-btn-mini .cg-icon { opacity: 0.7; }
 .cg-btn-mini:hover .cg-icon { opacity: 1; }
 
+
+/* === Visibilité conditionnelle selon le mode d'affichage =========
+   Les éléments tagués `data-cg-mode-only="X"` ne s'affichent que si
+   le wrapper a `data-cg-display="X"`. Pilotage purement CSS. */
+[data-cg-display="carrousel"] [data-cg-mode-only="galerie"],
+[data-cg-display="galerie"]   [data-cg-mode-only="carrousel"] {
+    display: none !important;
+}
+
+/* === Mode d'affichage : toggle radio visuel ===================== */
+.cg-card-mode .cg-card-head { border-bottom-color: transparent; padding-bottom: 14px; }
+
+.cg-mode-switch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+.cg-mode-option {
+    position: relative;
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 14px;
+    row-gap: 2px;
+    padding: 18px 20px;
+    background: var(--cg-surface);
+    border: 1.5px solid var(--cg-border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+.cg-mode-option:hover {
+    border-color: var(--cg-accent-border);
+    background: var(--cg-accent-soft);
+    transform: translateY(-1px);
+}
+.cg-mode-option.is-active {
+    border-color: var(--cg-accent);
+    background: var(--cg-accent-soft);
+    box-shadow: 0 0 0 3px var(--cg-ring);
+}
+.cg-mode-option input[type="radio"] {
+    /* L'input radio est caché — l'état visuel est piloté par .is-active (JS) */
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+.cg-mode-icon {
+    grid-row: 1 / span 2;
+    align-self: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    background: var(--cg-soft-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cg-ink-3);
+    transition: all 0.15s;
+}
+.cg-mode-option:hover .cg-mode-icon,
+.cg-mode-option.is-active .cg-mode-icon {
+    background: var(--cg-accent);
+    color: var(--cg-surface);
+}
+.cg-mode-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--cg-ink);
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+}
+.cg-mode-desc {
+    font-size: 12.5px;
+    color: var(--cg-ink-2);
+    line-height: 1.4;
+}
+
+.cg-mode-note {
+    margin: 16px 0 0;
+    padding: 12px 14px;
+    background: var(--cg-accent-soft);
+    border-left: 3px solid var(--cg-accent);
+    border-radius: 6px;
+    font-size: 12.5px;
+    color: var(--cg-ink);
+    line-height: 1.5;
+}
+.cg-mode-note strong { color: var(--cg-accent-2); }
+
+@media (max-width: 720px) {
+    .cg-mode-switch { grid-template-columns: 1fr; }
+}
 
 /* ============================================================
    Media queries (regroupées par breakpoint)

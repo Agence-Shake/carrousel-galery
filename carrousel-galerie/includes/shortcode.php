@@ -20,8 +20,11 @@ function cg_resolve( $key, $bp, $values ) {
  * Attributs (optionnels) qui surchargent les réglages globaux — mêmes clés que les réglages.
  */
 function cg_galerie_shortcode( $atts ) {
-    $defaults = cg_get_settings();
-    $atts     = shortcode_atts( $defaults, $atts, 'galerie_projet' );
+    $raw_atts = is_array( $atts ) ? $atts : [];
+    $preset_id = isset( $raw_atts['preset'] ) ? sanitize_key( $raw_atts['preset'] ) : 'default';
+
+    $defaults = cg_get_preset_settings( $preset_id );
+    $atts     = shortcode_atts( $defaults, $raw_atts, 'galerie_projet' );
 
     // Images depuis la metabox. get_the_ID() retourne 0 hors loop (widget, REST…),
     // on fallback sur get_queried_object_id() pour les contextes singulars.
@@ -50,6 +53,15 @@ function cg_galerie_shortcode( $atts ) {
     }
     if ( count( $images ) === 0 ) {
         return '';
+    }
+
+    // Le shortcode s'affiche réellement : on note son préset pour que
+    // cg_print_custom_css() n'injecte que le CSS des présets présents sur la page.
+    cg_mark_preset_rendered( $preset_id );
+
+    // Branche mode Galerie (grille CSS) — pas de Swiper, rendu plus simple.
+    if ( ( $atts['display_mode'] ?? 'carrousel' ) === 'galerie' ) {
+        return cg_render_gallery_mode( $images, $atts );
     }
 
     // Résolution par breakpoint (tablette/mobile vides → fallback desktop).
@@ -120,13 +132,14 @@ function cg_galerie_shortcode( $atts ) {
 
     // Variables CSS — couleurs.
     $css_vars = [
-        '--cg-bullet'        => $defaults['color_bullet'],
-        '--cg-bullet-active' => $defaults['color_bullet_active'],
-        '--cg-arrow'         => $defaults['color_arrow'],
-        '--cg-arrow-hover'   => $defaults['color_arrow_hover'],
+        '--cg-bullet'        => $atts['color_bullet'] ?? $defaults['color_bullet'],
+        '--cg-bullet-active' => $atts['color_bullet_active'] ?? $defaults['color_bullet_active'],
+        '--cg-arrow'         => $atts['color_arrow'] ?? $defaults['color_arrow'],
+        '--cg-arrow-hover'   => $atts['color_arrow_hover'] ?? $defaults['color_arrow_hover'],
     ];
-    if ( ! empty( $defaults['color_bg'] ) ) {
-        $css_vars['--cg-bg'] = $defaults['color_bg'];
+    $bg_color = $atts['color_bg'] ?? $defaults['color_bg'];
+    if ( ! empty( $bg_color ) ) {
+        $css_vars['--cg-bg'] = $bg_color;
     }
 
     // Variables CSS — padding latéral par breakpoint (avec fallback desktop).
@@ -230,3 +243,113 @@ function cg_galerie_shortcode( $atts ) {
 }
 add_shortcode( 'galerie_projet', 'cg_galerie_shortcode' );
 add_shortcode( 'carrousel_galerie', 'cg_galerie_shortcode' );
+
+/**
+ * Rendu mode "Galerie" — grille CSS responsive sans Swiper.
+ * Réutilise les valeurs slides_* (arrondies à l'entier) pour les colonnes,
+ * space_* pour le gap, image_max_height_* pour la hauteur max.
+ */
+function cg_render_gallery_mode( $images, $atts ) {
+    // Colonnes par breakpoint (arrondi int, min 1).
+    $cols_desktop  = max( 1, (int) round( floatval( cg_resolve( 'slides', 'desktop', $atts ) ) ) );
+    $cols_tablette = max( 1, (int) round( floatval( cg_resolve( 'slides', 'tablette', $atts ) ) ) );
+    $cols_mobile   = max( 1, (int) round( floatval( cg_resolve( 'slides', 'mobile', $atts ) ) ) );
+
+    // Gap par breakpoint (réutilise space_*, fallback Desktop).
+    $gap_resolve = function ( $bp ) use ( $atts ) {
+        $v = cg_resolve( 'space', $bp, $atts );
+        if ( $v === '' || $v === null ) {
+            return '0';
+        }
+        return is_numeric( $v ) ? ( (string) floatval( $v ) . 'px' ) : (string) $v;
+    };
+    $gap_desktop  = $gap_resolve( 'desktop' );
+    $gap_tablette = $gap_resolve( 'tablette' ) ?: $gap_desktop;
+    $gap_mobile   = $gap_resolve( 'mobile' )   ?: $gap_desktop;
+
+    // Hauteur max image (réutilise les vars existantes).
+    $imh_desktop  = cg_resolve( 'image_max_height', 'desktop', $atts ) ?: '65vh';
+    $imh_tablette = cg_resolve( 'image_max_height', 'tablette', $atts ) ?: $imh_desktop;
+    $imh_mobile   = cg_resolve( 'image_max_height', 'mobile', $atts ) ?: $imh_desktop;
+
+    // Padding latéral du wrapper (cohérent avec mode carrousel).
+    $pad_desktop  = cg_resolve( 'padding', 'desktop', $atts ) ?: '5vw';
+    $pad_tablette = cg_resolve( 'padding', 'tablette', $atts ) ?: $pad_desktop;
+    $pad_mobile   = cg_resolve( 'padding', 'mobile', $atts ) ?: $pad_desktop;
+
+    $css_vars = [
+        '--cg-cols-desktop'  => $cols_desktop,
+        '--cg-cols-tablette' => $cols_tablette,
+        '--cg-cols-mobile'   => $cols_mobile,
+        '--cg-cols-gap-desktop'  => $gap_desktop,
+        '--cg-cols-gap-tablette' => $gap_tablette,
+        '--cg-cols-gap-mobile'   => $gap_mobile,
+        '--cg-wp-desktop'  => $pad_desktop,
+        '--cg-wp-tablette' => $pad_tablette,
+        '--cg-wp-mobile'   => $pad_mobile,
+    ];
+
+    // Hauteur image. Un max-height en % se résout contre la cellule de grille, dont la
+    // hauteur dépend… de l'image : le navigateur dimensionne la ligne sur la hauteur
+    // naturelle puis réduit l'image → grand vide sous chaque image. En mode Galerie,
+    // "50%" est donc interprété comme 50% de la LARGEUR (→ aspect-ratio 100 / 50),
+    // ce qui donne des vignettes uniformes. Les autres unités restent des max-height.
+    foreach ( [ 'desktop' => $imh_desktop, 'tablette' => $imh_tablette, 'mobile' => $imh_mobile ] as $bp => $imh ) {
+        if ( preg_match( '/^\s*(\d+(?:\.\d+)?)\s*%\s*$/', (string) $imh, $m ) && floatval( $m[1] ) > 0 ) {
+            $css_vars[ '--cg-img-ratio-' . $bp ]      = '100 / ' . floatval( $m[1] );
+            $css_vars[ '--cg-img-h-' . $bp ]          = 'auto';
+            $css_vars[ '--cg-img-max-height-' . $bp ] = 'none';
+        } else {
+            $css_vars[ '--cg-img-ratio-' . $bp ]      = 'auto';
+            $css_vars[ '--cg-img-h-' . $bp ]          = '100%';
+            $css_vars[ '--cg-img-max-height-' . $bp ] = $imh;
+        }
+    }
+
+    $style_inline = '';
+    foreach ( $css_vars as $k => $v ) {
+        $style_inline .= $k . ':' . $v . ';';
+    }
+
+    // CSS du plugin uniquement — pas de Swiper.
+    wp_enqueue_style( 'cg-carrousel' );
+
+    $gallery_id = wp_unique_id( 'cg-gallery-' );
+
+    // Lignes max par breakpoint → nombre d'images visibles = colonnes × lignes.
+    // CSS ne sait pas comparer un index à une variable : on génère des règles
+    // nth-child scopées sur l'id de cette galerie, une par plage de breakpoint
+    // (plages exclusives → pas besoin de "reset" quand un breakpoint est illimité).
+    $cols = [ 'mobile' => $cols_mobile, 'tablette' => $cols_tablette, 'desktop' => $cols_desktop ];
+    $ranges = [
+        'mobile'   => '(max-width: 767px)',
+        'tablette' => '(min-width: 768px) and (max-width: 1023px)',
+        'desktop'  => '(min-width: 1024px)',
+    ];
+    $rows_css = '';
+    foreach ( $ranges as $bp => $query ) {
+        $rows = max( 0, intval( cg_resolve( 'rows', $bp, $atts ) ) );
+        if ( $rows === 0 ) {
+            continue; // illimité
+        }
+        $max = $cols[ $bp ] * $rows;
+        if ( $max >= count( $images ) ) {
+            continue; // toutes les images tiennent déjà
+        }
+        $rows_css .= '@media ' . $query . '{#' . $gallery_id . ' .cg-gallery img:nth-child(n+' . ( $max + 1 ) . '){display:none}}';
+    }
+
+    // Concat string sans whitespace entre les <img> : sinon wpautop() insère des
+    // <br> entre eux et casse la grille (une image par ligne au lieu de la grille CSS).
+    $imgs_html = '';
+    foreach ( $images as $image ) {
+        $url = esc_url( $image['url'] );
+        $alt = ! empty( $image['alt'] ) ? esc_attr( $image['alt'] ) : '';
+        $imgs_html .= '<img src="' . $url . '" alt="' . $alt . '" loading="lazy" decoding="async">';
+    }
+
+    return '<div id="' . esc_attr( $gallery_id ) . '" class="custom-swiper-wrapper cg-gallery-mode" style="' . esc_attr( $style_inline ) . '">'
+        . ( $rows_css !== '' ? '<style>' . $rows_css . '</style>' : '' )
+        . '<div class="cg-gallery">' . $imgs_html . '</div>'
+        . '</div>';
+}
